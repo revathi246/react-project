@@ -1,22 +1,63 @@
-import React from 'react';
-import { TextField, Checkbox } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { TextField, Checkbox, Select, MenuItem } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import PropTypes from 'prop-types';
 
 const GenericStackPlan = ({ rows, setRows }) => {
+  const [shedFilter, setShedFilter] = useState("All Sheds");
+  const [shedOptions, setShedOptions] = useState(["All Sheds"]);
+
+  useEffect(() => {
+    const uniqueSheds = Array.from(new Set(rows.map(row => row.shed)));
+    setShedOptions(["All Sheds", ...uniqueSheds]);
+  }, [rows]); 
+
+  console.log(shedOptions);
   // Handle row updates, especially for `assignedBags` when editing
   const handleProcessRowUpdate = (newRow) => {
-    const updatedRows = rows.map((row) => 
+    const updatedRows = rows.map((row) =>
       row.id === newRow.id ? { ...row, assignedBags: newRow.assignedBags } : row
     );
     setRows(updatedRows);
     return newRow;
   };
 
-  // Define columns with the specific headers
+  // shed handle change
+  const handleShedFilterChange = (event) => {
+    setShedFilter(event.target.value);
+  };
+
+  // Filtering rows for shed selction
+  const filteredRows = shedFilter === "All Sheds"
+    ? rows
+    : rows.filter((row) => row.shed === shedFilter);
+
   const columns = [
     { field: 'serialNumber', headerName: 'S.No.', width: 100 },
-    { field: 'shed', headerName: 'Shed', width: 150 },
+    {
+      field: 'shed',
+      headerName: 'Shed',
+      width: 150,
+      renderHeader: () => (
+        <>
+          {/* <InputLabel>Shed</InputLabel> */}
+          <Select
+            value={shedFilter}
+            onChange={handleShedFilterChange}
+            variant="outlined"
+            size="small"
+            style={{ width: '100%' }}
+          >
+            {shedOptions.map((option)=>(
+               <MenuItem key={option} value={option}>
+                {option}
+                </MenuItem>
+            ))}
+
+          </Select>
+        </>
+      ),
+    },
     { field: 'stack', headerName: 'Stack', width: 150 },
     { field: 'bagType', headerName: 'Bag Type', width: 150 },
     { field: 'availableSpace', headerName: 'Available Space (Bags)', width: 200 },
@@ -64,11 +105,11 @@ const GenericStackPlan = ({ rows, setRows }) => {
             const newRows = rows.map((row) => {
               if (row.id === params.id) {
                 // If unchecked, reset the assignedBags field to an empty string
-                return { 
-                  ...row, 
-                  checkbox: e.target.checked, 
+                return {
+                  ...row,
+                  checkbox: e.target.checked,
                   assignedBags: e.target.checked ? row.assignedBags : null 
-                }; 
+                };
               }
               return row;
             });
@@ -83,12 +124,12 @@ const GenericStackPlan = ({ rows, setRows }) => {
   return (
     <div style={{ height: 500, width: '100%' }}>
       <DataGrid
-        rows={rows}
+        rows={filteredRows}
         columns={columns}
         pageSize={10}
         processRowUpdate={handleProcessRowUpdate}
         experimentalFeatures={{ newEditingApi: true }} // Enable new editing API
-        disableSelectionOnClick 
+        disableSelectionOnClick
         disableRowSelectionOnClick
       />
 

@@ -25,7 +25,7 @@ const GenericStackPlan = ({ rows, setRows }) => {
       headerName: 'Assigned Bags',
       width: 200,
       editable: true, // Allow editing in general
-      renderEditCell: (params) => (
+      renderCell: (params) => (
         <TextField
           type="number"
           value={params.value || ''}
@@ -38,11 +38,18 @@ const GenericStackPlan = ({ rows, setRows }) => {
           inputProps={{
             style: {
               textAlign: 'center',
-             // padding: '4px',
+              padding: '4px',
               backgroundColor: 'white',
             },
           }}
           disabled={!params.row.checkbox} // Disable field if checkbox is false
+          style={{
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         />
       ),
     },
@@ -81,8 +88,10 @@ const GenericStackPlan = ({ rows, setRows }) => {
         pageSize={10}
         processRowUpdate={handleProcessRowUpdate}
         experimentalFeatures={{ newEditingApi: true }} // Enable new editing API
-        disableSelectionOnClick
+        disableSelectionOnClick 
+        disableRowSelectionOnClick
       />
+
     </div>
   );
 };
@@ -96,7 +105,7 @@ GenericStackPlan.propTypes = {
       stack: PropTypes.string.isRequired,
       bagType: PropTypes.string.isRequired,
       availableSpace: PropTypes.number.isRequired,
-      assignedBags: PropTypes.oneOfType([PropTypes.number, PropTypes.oneOf([null])]),
+      assignedBags: PropTypes.oneOfType([PropTypes.number, PropTypes.any]),  // Allow both number and null
       checkbox: PropTypes.bool, // Checkbox field to control editability
     })
   ).isRequired,

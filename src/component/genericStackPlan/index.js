@@ -1,12 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { TextField, Checkbox, Select, MenuItem } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
+
+import {Add as AddIcon} from '@mui/icons-material';
+import { TextField, Checkbox, Select, MenuItem ,Box ,FormGroup,FormControlLabel, Button ,Dialog ,DialogTitle, Divider  ,DialogContent ,DialogContentText, Typography, DialogActions} from '@mui/material';
+import { DataGrid, GridToolbarExport, GridToolbarQuickFilter, GridToolbarDensitySelector } from '@mui/x-data-grid';
 import PropTypes from 'prop-types';
+import GenericTemporaryStorage from '../temporaryStorage';
 
 const GenericStackPlan = ({ rows, setRows }) => {
   const [shedFilter, setShedFilter] = useState("All Sheds");
   const [shedOptions, setShedOptions] = useState(["All Sheds"]);
+  const [addShedOptions ,setAddShedOptions] =useState(["RailHead Storage" ,"1" ,"2"]) ;
+  const [addSelectedShed, setAddSelectedShed] = useState("RailHead Storage");
+  const [addStackOptions, setAddStackOptions] = useState(["RAH12", "RAH13", "RAH14"]); // Default for "RailHead Storage"
+  const [addSelectedStack, setAddSelectedStack] = useState("RAH12");
+  const [open, setOpen] = useState(false);
+  const [checked ,setChecked] =useState(false);
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
 
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const handleButtonClose = () => {
+    setOpen(false);
+  
+    const matchingRows = rows.filter((row) => row.shed === addSelectedShed);
+
+    if (matchingRows.length > 0) {
+      const highestSerialNumber = Math.max(...matchingRows.map((row) => row.serialNumber));
+      const newSerialNumber = highestSerialNumber + 1;
+      const newRow = { 
+      id: rows.length + 1, serialNumber: newSerialNumber, shed: addSelectedShed,   stack: addSelectedStack,  bagType: '',  availableSpace: '', assignedBags: 0, checkbox: false,
+      };
+      const updatedRows = rows.filter((row) => row.shed === addSelectedShed);
+      setRows([...updatedRows, newRow]);
+    } else {    
+      const newRow = {
+        id: rows.length + 1,  serialNumber: rows.length + 1,   shed: addSelectedShed,   stack: addSelectedStack,    bagType: '',availableSpace: '',  assignedBags: 0,  checkbox: false,
+      };
+      setRows([ newRow]);
+    }
+  };
+  
   useEffect(() => {
     const uniqueSheds = Array.from(new Set(rows.map(row => row.shed)));
     setShedOptions(["All Sheds", ...uniqueSheds]);
@@ -27,6 +63,32 @@ const GenericStackPlan = ({ rows, setRows }) => {
     setShedFilter(event.target.value);
   };
 
+  //dialog add shed 
+  const handleAddShedChange = (e) => {
+    const selectedShed = e.target.value;
+    setAddSelectedShed(selectedShed);
+
+    // Update the related stack options based on selected shed
+    if (selectedShed === "RailHead Storage") {
+      setAddStackOptions(["RAH12", "RAH13", "RAH14"]); // Stack options for RailHead Storage
+      setAddSelectedStack("RAH12"); // Default stack for RailHead Storage
+
+    } else if (selectedShed === "1") {
+      setAddStackOptions(["1A", "1B", "1C"]);
+      setAddSelectedStack("1A"); 
+
+    } else if (selectedShed === "2") {
+      setAddStackOptions(["2A", "2B", "2C"]); 
+      setAddSelectedStack("2A");
+    }
+  };
+  const handleAddStackChange =(e) =>{
+    setAddSelectedStack(e.target.value) ;
+  }
+  const handleCheckboxChange =(e) =>{
+    console.log(e.target.checked)
+    setChecked(e.target.checked);
+  }
   // Filtering rows for shed selction
   const filteredRows = shedFilter === "All Sheds"
     ? rows
@@ -121,19 +183,123 @@ const GenericStackPlan = ({ rows, setRows }) => {
     },
   ];
 
+  const CustomToolbar = () => {
+    return (
+     <>
+      <Box style={{ display: 'flex', gap: '10px', padding: '8px' }}>
+
+      <GridToolbarDensitySelector />
+      <GridToolbarExport/>
+      <GridToolbarQuickFilter
+          placeholder="Search..."
+          variant="outlined"
+          size="small"
+          // style={{ marginRight: "16px" }}
+        />
+
+      </Box>
+      <Box style={{ display: 'flex', gap: '10px', padding: '8px' }}>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Checkbox 
+              // checked={gilad} onChange={handleChange} 
+              name="gilad" />
+            }
+            label="All Bag Type Stacks"
+          />
+        </FormGroup>
+          <Button startIcon={<AddIcon />}  onClick={handleClickOpen}>
+          Add Other Stack
+          </Button>
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+          PaperProps={{
+            style: {
+              backgroundColor: '#fff',
+              width: '600px'
+            },
+          }}
+          sx={{
+            "& .MuiDialog-container": {
+              alignItems: "flex-start",
+            }
+          }}
+          >
+            <DialogTitle id="alert-dialog-title">
+              Add Stack
+            </DialogTitle>
+            <Divider />
+            <DialogContent>
+              <Box display="flex" alignItems="center" justifyContent="space-evenly">
+                <Typography variant='subtitle1' >Shed</Typography>
+                <Select value={addSelectedShed} onChange={handleAddShedChange}>
+                  {addShedOptions.map((option)=>(
+                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                  ))}
+                </Select>
+                <Typography variant='subtitle1' >Stack</Typography>
+                <Select value={addSelectedStack} onChange={handleAddStackChange}>
+                  {addStackOptions.map((option)=>(
+                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                  ))}
+                </Select>
+              </Box>
+            </DialogContent>
+            <Divider/>
+            <DialogActions>
+              <Button onClick={handleButtonClose}  variant="contained">
+                Add stack
+              </Button>
+            </DialogActions>
+          </Dialog>
+      </Box>
+     </>
+      
+    );
+  };
+
+ 
   return (
-    <div style={{ height: 500, width: '100%' }}>
+    <>
+    <div style={{ height: 400,  width: '100%' }}>
       <DataGrid
         rows={filteredRows}
         columns={columns}
         pageSize={10}
         processRowUpdate={handleProcessRowUpdate}
+        pageSizeOptions={[10, 25, 50, 100]} // Available pagination options
         experimentalFeatures={{ newEditingApi: true }} // Enable new editing API
         disableSelectionOnClick
         disableRowSelectionOnClick
+        disableColumnMenu
+        slots={{
+          toolbar: CustomToolbar,
+        }}
       />
 
     </div>
+    <div>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={checked}
+            onChange={handleCheckboxChange}
+            // color="primary" 
+          />
+        }
+        label="Create Temporary Storage"
+      />
+      {checked &&
+        <GenericTemporaryStorage></GenericTemporaryStorage>
+      }
+    </div>
+    </>
+    
+
   );
 };
 

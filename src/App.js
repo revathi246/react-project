@@ -6,7 +6,7 @@ function App() {
   const [rows, setRows] = useState([
     // Your initial rows data
     { id: 1, serialNumber: 1, shed: 'A', stack: 'S1', bagType: 'Type 1', availableSpace: 10, assignedBags: 5, checkbox: true },
-    { id: 2, serialNumber: 2, shed: 'B', stack: 'S2', bagType: 'Type 2', availableSpace: 20, assignedBags: null, checkbox: false },
+    { id: 2, serialNumber: 2, shed: '1', stack: 'S2', bagType: 'Type 2', availableSpace: 20, assignedBags: null, checkbox: false },
     // Add more rows as needed
   ]);
   useEffect(()=>{
